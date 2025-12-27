@@ -1,19 +1,15 @@
 name: Deploy to GitHub Pages
 
 on:
-  # 每次推送到 main 分支时触发
   push:
-    branches: [ main, master ]
-  # 允许在 Actions 页面手动触发
+    branches: [ main ]
   workflow_dispatch:
 
-# 设置 GITHUB_TOKEN 的权限，允许部署到 Pages
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# 允许并发部署
 concurrency:
   group: "pages"
   cancel-in-progress: true
@@ -25,28 +21,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 8
-
-      - name: Setup Node
+      - name: Install Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'pnpm'
 
+      # 这一步非常重要：安装依赖 (包括 esbuild)
       - name: Install dependencies
-        run: pnpm install
+        run: npm install
 
+      # 执行 build.js 进行构建 (生成 dist 文件夹)
       - name: Build
-        run: pnpm build
+        run: npm run build
+        env:
+          NODE_ENV: production
 
+      # 上传 dist 文件夹的内容
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # 注意：这里假设构建输出目录是 'dist'
-          # 如果项目使用的是 Vite，通常就是 'dist'
           path: './dist'
 
   deploy:
